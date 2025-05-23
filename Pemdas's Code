@@ -1,0 +1,58 @@
+const int ledPin = 13;
+const int buttonPin = 7;
+const int ldrPin = A5;
+int threshold = 600;
+
+// Mode sistem
+enum Mode { AUTO_MODE, OVERRIDE_ON, OVERRIDE_OFF };
+Mode currentMode = AUTO_MODE;
+
+bool lastButtonState = HIGH;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ldrPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+}
+
+void loop() {
+  int ldrValue = analogRead(ldrPin);
+  bool currentButtonState = digitalRead(buttonPin);
+
+  // Jika tombol ditekan (dari HIGH ke LOW)
+  if (currentButtonState == LOW && lastButtonState == HIGH) {
+    // Ganti mode secara berurutan
+    if (currentMode == AUTO_MODE) {
+      currentMode = OVERRIDE_ON;
+    } else if (currentMode == OVERRIDE_ON) {
+      currentMode = OVERRIDE_OFF;
+    } else {
+      currentMode = AUTO_MODE;
+    }
+
+    delay(100); // Debounce
+  }
+  lastButtonState = currentButtonState;
+
+  // Eksekusi berdasarkan mode saat ini
+  if (currentMode == AUTO_MODE) {
+    if (ldrValue < threshold) {
+      digitalWrite(ledPin, HIGH);
+    } else {
+      digitalWrite(ledPin, LOW);
+    }
+  } else if (currentMode == OVERRIDE_ON) {
+    digitalWrite(ledPin, HIGH);
+  } else if (currentMode == OVERRIDE_OFF) {
+    digitalWrite(ledPin, LOW);
+  }
+
+  // Debug (opsional)
+  /*
+  Serial.print("LDR: ");
+  Serial.print(ldrValue);
+  Serial.print("  Mode: ");
+  Serial.println(currentMode);
+  */
+}
